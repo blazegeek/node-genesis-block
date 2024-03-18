@@ -3,15 +3,16 @@ var Hash = require('multi-hashing');
 
 var defaults = {
 	//the (unix) time when the genesisblock is created
-	time: Math.round((new Date()).getTime() / 1000),
+	time: 1710705900,
+	//time: Math.round((new Date()).getTime() / 1000),
 	//the pszTimestamp found in the coinbase of the genesisblock
 	timestamp: "Dive in and GEEK!",
 	//the first value of the nonce that will be incremented when searching the genesis hash
-	nonce: 1,
+	nonce: 0,
 	//the PoW algorithm: [x11|x13|x15|geek|quark|keccak|qubit|neoscrypt|lyra2re...]
 	algorithm: 'geek',
 	//the pubkey found in the output script
-	pubkey: '04c902f7d5b62a5b71fdea1126e118df2be07afc25eae05bc69376473d6effe0af581c6388ba1ddb24910d24a6850e99d5108a65b9ef90ed9c702073e46f76532a',
+	pubkey: '04523d49d8413248c959eb3518a86fa6cc189ca5508b102dc5f882de30ecc38b6abcbbed7901834c8cbc68cd4c739af6f7857b066a56cbd8b1e59929d350cd5f5b',
 	//the value in coins for the output, full value (exp. in bitcoin 5000000000 - To get other coins value: Block Value * 100000000)
 	value: 100000000000,
 	//the target in compact representation, associated to a difficulty of 1
@@ -64,7 +65,6 @@ function createOutputScript(options) {
 	return Buffer.from('41' + options.pubkey + 'ac', 'hex');
 }
 
-
 function createTx(options) {
 	var input = createInputScript(options);
 	var out = createOutputScript(options);
@@ -89,12 +89,12 @@ function createTx(options) {
 	tx.writeInt32LE(1, position);
 	tx.writeInt32LE(1, position += 4);
 	tx.write(Buffer.alloc(32).toString('hex'), position += 1, 32, 'hex');
-	//tx.writeInt32LE(0xFFFFFFFF, position += 32, 4);
-	tx.writeDoubleLE(0xFFFFFFFF, position += 32, 4);
+	tx.writeUInt32LE(0xFFFFFFFF, position += 32);
+	//tx.writeDoubleLE(0xFFFFFFFF, position += 32, 4); // incorrect output (should be ffffffff)
 	tx.writeInt32LE(input.length, position += 4);
 	tx.write(input.toString('hex'), position += 1, input.length, "hex");
-	//tx.writeInt32LE(0xFFFFFFFF, position += input.length, 4);
-	tx.writeDoubleLE(0xFFFFFFFF, position += input.length);
+	tx.writeUInt32LE(0xFFFFFFFF, position += input.length);
+	//tx.writeDoubleLE(0xFFFFFFFF, position += input.length); // incorrect output (should be ffffffff)
 	tx.writeInt32LE(1, position += 4);
 	tx.write(Buffer.from($.numToBytes(options.value)).toString('hex'), position += 1, 8, 'hex'); // 50 * coin
 	tx.writeInt32LE(0x43, position += 8);
